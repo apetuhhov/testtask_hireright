@@ -17,7 +17,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Reworked JAXP 1.4.6 sample code of SAX usage.
+ * Based on JAXP 1.4.6 sample code to parse XML documents using SAX.
  * 
  * @author apetuhhov
  * 
