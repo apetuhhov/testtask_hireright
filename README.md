@@ -4,5 +4,5 @@ To run the program you will require Git, Java SDK and Maven to be installed on y
 	git clone https://github.com/apetuhhov/testtask_hireright.git
 	cd testtask_hireright
 	mvn clean install
-	cd target/classes
+	cd target
 	java -jar testtask_hireright.jar -usage
