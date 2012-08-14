@@ -1,12 +1,8 @@
 package test;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 
 import javax.xml.XMLConstants;
@@ -14,8 +10,8 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.Attributes;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXParseException;
@@ -35,7 +31,7 @@ public class ElemCount extends DefaultHandler {
 	static final String JAXP_SCHEMA_SOURCE = "http://java.sun.com/xml/jaxp/properties/schemaSource";
 
 	/** A Hashtable with tag names as keys and Integers as values */
-	private Map<String, Integer> tags;
+	Map<String, Integer> tags;
 	// element to search
 	String element;
 
@@ -51,7 +47,7 @@ public class ElemCount extends DefaultHandler {
 	// Parser calls this for each element in a document
 	public void startElement(String namespaceURI, String localName,
 			String qName, Attributes atts) throws SAXException {
-		if (element != null && !element.equals(qName)) {
+		if (element != null && !element.equals(localName)) {
 			return;
 		}
 		String key = qName;
@@ -67,6 +63,10 @@ public class ElemCount extends DefaultHandler {
 
 	// Parser calls this once after parsing a document
 	public void endDocument() throws SAXException {
+		if (tags.isEmpty()) {
+			System.out.println("Specified element not found.");
+			return;
+		}
 		for (Map.Entry<String, Integer> e : tags.entrySet()) {
 			System.out.println("Element \"" + e.getKey() + "\" occurs "
 					+ e.getValue() + " times");
@@ -116,7 +116,14 @@ public class ElemCount extends DefaultHandler {
 		if (filename == null) {
 			usage();
 		}
+		parse(filename, dtdValidate, xsdValidate, schemaSource, new ElemCount(
+				element), new MyErrorHandler(System.err));
+	}
 
+	static void parse(String filename, boolean dtdValidate,
+			boolean xsdValidate, String schemaSource,
+			ContentHandler contentHandler, ErrorHandler errorHandler)
+			throws Exception {
 		// There are several ways to parse a document using SAX and JAXP.
 		// We show one approach here. The first step is to bootstrap a
 		// parser. There are two ways: one is to use only the SAX API, the
@@ -175,10 +182,10 @@ public class ElemCount extends DefaultHandler {
 		XMLReader xmlReader = saxParser.getXMLReader();
 
 		// Set the ContentHandler of the XMLReader
-		xmlReader.setContentHandler(new ElemCount(element));
+		xmlReader.setContentHandler(contentHandler);
 
 		// Set an ErrorHandler before parsing
-		xmlReader.setErrorHandler(new MyErrorHandler(System.err));
+		xmlReader.setErrorHandler(errorHandler);
 
 		// Tell the XMLReader to parse the XML document
 		xmlReader.parse(new File(filename).toURI().toURL().toString());
@@ -199,24 +206,8 @@ public class ElemCount extends DefaultHandler {
 		System.exit(1);
 	}
 
-	/**
-	 * Convert from a filename to a file URL.
-	 */
-	private static String convertToFileURL(String filename) {
-		// On JDK 1.2 and later, simplify this to:
-		// "path = file.toURL().toString()".
-		String path = new File(filename).getAbsolutePath();
-		if (File.separatorChar != '/') {
-			path = path.replace(File.separatorChar, '/');
-		}
-		if (!path.startsWith("/")) {
-			path = "/" + path;
-		}
-		return "file:" + path;
-	}
-
 	// Error handler to report errors and warnings
-	private static class MyErrorHandler implements ErrorHandler {
+	static class MyErrorHandler implements ErrorHandler {
 		/** Error handler output goes here */
 		private PrintStream out;
 

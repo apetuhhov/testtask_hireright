@@ -13,20 +13,17 @@ Executing the commands below will pull down sources, build them and print out us
 	java -jar testtask_hireright.jar -usage
 	
 Usage printout:
->Usage: ElemCount [-options] <file.xml>  
-       -dtd = DTD validation  
-       -xsd | -xsdss <file.xsd> = W3C XML Schema validation using xsi: hints  
-       &nbsp;&nbsp;&nbsp;&nbsp;in instance document or schema source <file.xsd>  
-       -xsdss <file> = W3C XML Schema validation using schema source <file>  
-       -usage or -help = this message  
+>Usage: ElemCount [-options] &lt;file.xml>  
+>       -dtd = DTD validation  
+>       -xsd | -xsdss &lt;file.xsd> = W3C XML Schema validation using xsi: hints  
+>       &nbsp;&nbsp;&nbsp;&nbsp;in instance document or schema source &lt;file.xsd>  
+>       -xsdss &lt;file> = W3C XML Schema validation using schema source &lt;file>  
+>       -e &lt;name> = element, whose occurences to be count  
+>       -usage or -help = this message  
 
 Next commands will run tests used while writing the code:
 
-	java -jar testtask_hireright.jar test-classes/PurchaseOrder/po.xml
-	java -jar testtask_hireright.jar -xsdss test-classes/PurchaseOrder/po.xsd test-classes/PurchaseOrder/po.xml
-	java -jar testtask_hireright.jar test-classes/PublicationCatalogue/Catalogue.xml
-	java -jar testtask_hireright.jar -xsd test-classes/PublicationCatalogue/Catalogue.xml
-	java -jar testtask_hireright.jar test-classes/Invoice/Invoice.xml
-	java -jar testtask_hireright.jar -dtd test-classes/Invoice/Invoice.xml
-	java -jar testtask_hireright.jar test-classes/GolfCountryClub/GolfCountryClub.xml
-	java -jar testtask_hireright.jar -xsd test-classes/GolfCountryClub/GolfCountryClub.xml
+	java -jar testtask_hireright.jar -e name -xsdss test-classes/PurchaseOrder/po.xsd test-classes/PurchaseOrder/po.xml
+	java -jar testtask_hireright.jar -e Book -xsd test-classes/PublicationCatalogue/Catalogue.xml
+	java -jar testtask_hireright.jar -e state -dtd test-classes/Invoice/Invoice.xml
+	java -jar testtask_hireright.jar -e FirstName -xsd test-classes/GolfCountryClub/GolfCountryClub.xml
