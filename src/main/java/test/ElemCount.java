@@ -2,7 +2,10 @@ package test;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.XMLConstants;
@@ -33,10 +36,10 @@ public class ElemCount extends DefaultHandler {
 	/** A Hashtable with tag names as keys and Integers as values */
 	Map<String, Integer> tags;
 	// element to search
-	String element;
+	List<String> elements;
 
-	ElemCount(String element) {
-		this.element = element;
+	ElemCount(List<String> elements) {
+		this.elements = elements;
 	}
 
 	// Parser calls this once at the beginning of a document
@@ -47,7 +50,8 @@ public class ElemCount extends DefaultHandler {
 	// Parser calls this for each element in a document
 	public void startElement(String namespaceURI, String localName,
 			String qName, Attributes atts) throws SAXException {
-		if (element != null && !element.equals(localName)) {
+		if (elements != null && !elements.contains(localName)
+				&& !elements.contains(qName)) {
 			return;
 		}
 		String key = qName;
@@ -81,7 +85,7 @@ public class ElemCount extends DefaultHandler {
 		boolean dtdValidate = false;
 		boolean xsdValidate = false;
 		String schemaSource = null;
-		String element = null;
+		String elements = null;
 
 		// Parse arguments
 		for (int i = 0; i < args.length; i++) {
@@ -99,7 +103,7 @@ public class ElemCount extends DefaultHandler {
 				if (i == args.length - 1) {
 					usage();
 				}
-				element = args[++i];
+				elements = args[++i];
 			} else if (args[i].equals("-usage")) {
 				usage();
 			} else if (args[i].equals("-help")) {
@@ -116,8 +120,13 @@ public class ElemCount extends DefaultHandler {
 		if (filename == null) {
 			usage();
 		}
-		parse(filename, dtdValidate, xsdValidate, schemaSource, new ElemCount(
-				element), new MyErrorHandler(System.err));
+		parse(filename,
+				dtdValidate,
+				xsdValidate,
+				schemaSource,
+				new ElemCount(elements == null ? Collections
+						.<String> emptyList() : Arrays.asList(elements
+						.split(","))), new MyErrorHandler(System.err));
 	}
 
 	static void parse(String filename, boolean dtdValidate,
@@ -201,7 +210,7 @@ public class ElemCount extends DefaultHandler {
 		System.err
 				.println("       -xsdss <file> = W3C XML Schema validation using schema source <file>");
 		System.out
-				.println("       -e <element local or qualified name> = element, whose occurences to be count");
+				.println("       -e <name...> = comma separated list of element names (local or qalified), whose occurences to be count");
 		System.err.println("       -usage or -help = this message");
 		System.exit(1);
 	}

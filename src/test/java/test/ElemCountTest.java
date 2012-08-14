@@ -5,10 +5,10 @@ import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.easymock.IAnswer;
 import org.junit.Test;
-import org.junit.experimental.categories.Categories.ExcludeCategory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -18,18 +18,31 @@ import test.ElemCount.MyErrorHandler;
 public class ElemCountTest {
 	@Test
 	public void testExternalXSD() throws Exception {
-		ElemCount elemCount = new TestElemCount("name");
+		ElemCount elemCount = new TestElemCount("name", "item");
 		ElemCount.parse("target/test-classes/PurchaseOrder/po.xml", false,
 				true, "target/test-classes/PurchaseOrder/po.xsd", elemCount,
 				new MyErrorHandler(System.err));
 		assertNotNull(elemCount.tags);
 		assertTrue(!elemCount.tags.isEmpty());
+		assertEquals(2, elemCount.tags.size());
 		assertEquals(new Integer(2), elemCount.tags.get("name"));
+		assertEquals(new Integer(2), elemCount.tags.get("item"));
 	}
 
 	@Test
 	public void testXSDNamespace() throws Exception {
 		ElemCount elemCount = new TestElemCount("Book");
+		ElemCount.parse(
+				"target/test-classes/PublicationCatalogue/Catalogue.xml",
+				false, true, null, elemCount, new MyErrorHandler(System.err));
+		assertNotNull(elemCount.tags);
+		assertTrue(!elemCount.tags.isEmpty());
+		assertEquals(new Integer(2), elemCount.tags.get("c:Book"));
+	}
+
+	@Test
+	public void testXSDNamespace2() throws Exception {
+		ElemCount elemCount = new TestElemCount("c:Book");
 		ElemCount.parse(
 				"target/test-classes/PublicationCatalogue/Catalogue.xml",
 				false, true, null, elemCount, new MyErrorHandler(System.err));
@@ -111,8 +124,12 @@ public class ElemCountTest {
 	}
 
 	class TestElemCount extends ElemCount {
-		TestElemCount(String element) {
-			super(element);
+		TestElemCount(String... elements) {
+			this(Arrays.asList(elements));
+		}
+
+		TestElemCount(List<String> elements) {
+			super(elements);
 		}
 
 		@Override
