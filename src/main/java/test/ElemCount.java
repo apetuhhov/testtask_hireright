@@ -1,15 +1,21 @@
 package test;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXParseException;
@@ -25,41 +31,45 @@ import org.xml.sax.helpers.DefaultHandler;
 public class ElemCount extends DefaultHandler {
 	/** Constants used for JAXP 1.2 */
 	static final String JAXP_SCHEMA_LANGUAGE = "http://java.sun.com/xml/jaxp/properties/schemaLanguage";
-	static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
+	static final String W3C_XML_SCHEMA = XMLConstants.W3C_XML_SCHEMA_NS_URI; // http://www.w3.org/2001/XMLSchema
 	static final String JAXP_SCHEMA_SOURCE = "http://java.sun.com/xml/jaxp/properties/schemaSource";
 
 	/** A Hashtable with tag names as keys and Integers as values */
-	private Hashtable tags;
+	private Map<String, Integer> tags;
+	// element to search
+	String element;
+
+	ElemCount(String element) {
+		this.element = element;
+	}
 
 	// Parser calls this once at the beginning of a document
 	public void startDocument() throws SAXException {
-		tags = new Hashtable();
+		tags = new HashMap<String, Integer>();
 	}
 
 	// Parser calls this for each element in a document
 	public void startElement(String namespaceURI, String localName,
 			String qName, Attributes atts) throws SAXException {
-		String key = localName;
-		Object value = tags.get(key);
+		if (element != null && !element.equals(qName)) {
+			return;
+		}
+		String key = qName;
+		Integer value = tags.get(key);
 		if (value == null) {
 			// Add a new entry
-			tags.put(key, new Integer(1));
+			tags.put(key, 1);
 		} else {
 			// Get the current count and increment it
-			int count = ((Integer) value).intValue();
-			count++;
-			tags.put(key, new Integer(count));
+			tags.put(key, ++value);
 		}
 	}
 
 	// Parser calls this once after parsing a document
 	public void endDocument() throws SAXException {
-		Enumeration e = tags.keys();
-		while (e.hasMoreElements()) {
-			String tag = (String) e.nextElement();
-			int count = ((Integer) tags.get(tag)).intValue();
-			System.out.println("Local Name \"" + tag + "\" occurs " + count
-					+ " times");
+		for (Map.Entry<String, Integer> e : tags.entrySet()) {
+			System.out.println("Element \"" + e.getKey() + "\" occurs "
+					+ e.getValue() + " times");
 		}
 	}
 
@@ -71,6 +81,7 @@ public class ElemCount extends DefaultHandler {
 		boolean dtdValidate = false;
 		boolean xsdValidate = false;
 		String schemaSource = null;
+		String element = null;
 
 		// Parse arguments
 		for (int i = 0; i < args.length; i++) {
@@ -84,6 +95,11 @@ public class ElemCount extends DefaultHandler {
 				}
 				xsdValidate = true;
 				schemaSource = args[++i];
+			} else if (args[i].equals("-e")) {
+				if (i == args.length - 1) {
+					usage();
+				}
+				element = args[++i];
 			} else if (args[i].equals("-usage")) {
 				usage();
 			} else if (args[i].equals("-help")) {
@@ -144,6 +160,14 @@ public class ElemCount extends DefaultHandler {
 		// 1.2 maintenance update specification for more complex usages of
 		// this feature.
 		if (schemaSource != null) {
+			// Here is a complete list of the possible values for that argument:
+			//
+			// A string that points to the URI of the schema
+			// An InputStream with the contents of the schema
+			// A SAX InputSource
+			// A File
+			// An array of Objects, each of which is one of the types defined
+			// here.
 			saxParser.setProperty(JAXP_SCHEMA_SOURCE, new File(schemaSource));
 		}
 
@@ -151,13 +175,13 @@ public class ElemCount extends DefaultHandler {
 		XMLReader xmlReader = saxParser.getXMLReader();
 
 		// Set the ContentHandler of the XMLReader
-		xmlReader.setContentHandler(new ElemCount());
+		xmlReader.setContentHandler(new ElemCount(element));
 
 		// Set an ErrorHandler before parsing
 		xmlReader.setErrorHandler(new MyErrorHandler(System.err));
 
 		// Tell the XMLReader to parse the XML document
-		xmlReader.parse(convertToFileURL(filename));
+		xmlReader.parse(new File(filename).toURI().toURL().toString());
 	}
 
 	private static void usage() {
@@ -169,6 +193,8 @@ public class ElemCount extends DefaultHandler {
 				.println("           in instance document or schema source <file.xsd>");
 		System.err
 				.println("       -xsdss <file> = W3C XML Schema validation using schema source <file>");
+		System.out
+				.println("       -e <element local or qualified name> = element, whose occurences to be count");
 		System.err.println("       -usage or -help = this message");
 		System.exit(1);
 	}
