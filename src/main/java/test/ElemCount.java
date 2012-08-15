@@ -210,7 +210,7 @@ public class ElemCount extends DefaultHandler {
 		System.err
 				.println("       -xsdss <file> = W3C XML Schema validation using schema source <file>");
 		System.out
-				.println("       -e <name...> = comma separated list of element names (local or qalified), whose occurences to be count");
+				.println("       -e <name1>[,<name2>]... = comma separated list of element names (local or qalified), whose occurences to be count");
 		System.err.println("       -usage or -help = this message");
 		System.exit(1);
 	}
